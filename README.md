@@ -1,5 +1,3 @@
-# Advanced_Compiler_Optimization
-
 Parser → Optimizer → Code Generation
 
 OPTIMIZER:
@@ -125,7 +123,7 @@ For all n, n != entry
 T = N //temp T is equal to the set of all nodes
 For each predecessor p of n
 T (Intersect= ) Dom(p)
-D = {n} (Union) T
+D = {n} ∪  T
 If D != Dom(n)
 change = true
 Dom(n) = D
@@ -162,9 +160,119 @@ Process:
 Rdefs (Reaching definitions)
 2) A definition d (x = y (op) z) of x reaches a point p in the program if there exists a path from d to p that does not pass through any other definition of x. → May reach
 
+These data flow analysis RDEFs are used to tell us if a variable defined a certain way is still within scope. Can help us in register allocation →  we get rid of the variable stored in register?
+
+PARTIALLY ORDERED SETS (poset)
+elements, ordering, relations
+{a, b, c, …} <= 
+Partial means – order is not defined on every pair
+⊆   ← means subset
+a ⊆ b may be true, but we may not be sure if b ⊆ a. This is what partially ordered means.
 
 
 
+
+Flow function (FF): functions on the elements on our domain, are monotonic (ordered preserving)
+example of monotonicity: if  in1 <= in2             =>    f(in1) <= f(in2)
+Note that we are not talking about monotonically increasing (x <= f(x)).
+
+Each FF has a fixed gen set (definitions created) and kill set (definitions removed). 
+. .
+∪ 
+
+
+LIVE VARIABLE ANALYSIS
+find paths in the program and redefinitions of variables
+A variable v is alive at program point p if there exists a path from p to the end of the program such that v is used before being redefined. 
+Confluence: 
+Come up with data flow equations:
+in(si) = gen(si) ∪  [out(si) – kill(si)]
+EG: if f: x = y op z
+gen = {y, z}
+kill = {x}
+
+
+Problem: Very busy expressions
+1. Domain : set of all expressions in our program
+2.  An expression “x op y” is very busy at point p if “x op y” is evaluated in al paths from p to the end, and neither x nor y is redefined between p and the expressions
+3. Backward
+4. Confluence is intersection
+5. f: x = y op z
+Gen = {y, z}
+kill = {x}
+in(f) = gen(f) ∪  [out(f) – kill(f)]
+
+
+EARLY OPTIMIZATIONS:
+Constant Folding (Evaluation)
+x = 3 + 2 => x = 5
+watch out for overflow and error conditions (eg 32 bit vs 64 bit, division by 0)
+Scalar Replacement of Aggregates
+Eg: 
+typedef struct {
+	   	int x; int y;
+	       } coord;
+	instead of:
+	coord z; z.x, z.y, use int z_x, z_y
+Algebraic simplifications:
+I * 0 => 0 or I + 0 => I
+Boolean short curcuiting:
+b || 1 => 1
+b && 1 => b
+     
+
+Copy Propogation:
+eg: x = y.
+Just replace all instances of x with y, remove above statement.
+DU-Chains: At a def, give a list of all uses that are reached by the definitions
+UD-Cchains: At a use, give a list of all defs that reach the use
+For each copy statement S: “x = y” do:
+If every use of x which is replaced by this def by x (DU chain) is also reached by this in the reaching copies sense,
+replace each use of x by every use of y
+delete the copy statement. 
+Dead code elimination
+eliminate a statement where no variables in that statement is used
+EG: 
+x = y op z
+if x is never used in the future → dead code, then we dont need it
+if we remove it, we remove every use of y,z
+	Testifdead(S)
+		if the DU-CHAIN of the LHS of S is empty then:
+			remove S (mark as dead)
+			For each var v in RHS of S
+				for each def in the UD chain of V
+					remove use of v from the definition (modify its DU chain)
+					Testifdead(def)
+
+REDUNDANCY ELIMINATION (RE)
+Common Subexpression elimination (CSE)
+Local form: within a BB
+EG: 
+1. x = a + b
+2. y = c + d
+3. z = a + b
+4. c = d + 1
+5. u = a + b
+			use 5 tuples < pos, opnd1, op, opnd2, temp>
+			Basic process: 
+look at the statement → expression, see if there's a match in our list of 5 tuples
+if not → create one
+if yes → if the temp value is null
+create a new temp ti → change the null to ti
+insert ti = opnd1 op opnd2 prior to pos
+replace stmt at pos with LHS = ti
+replace current stmt with LHS = ti
+                                                  → if the temp value is not null by tj
+						replace the current stmt by LHS = tj
+
+			EG: From the above code, the local form:
+1. < 1, a, +, b, null>
+2. < 1, a, +, b, null>, <2, c, +, d, null>
+3. statement 1 is now: t1 = a + b; x = t1; statement 3 is now: z = t1;  < 1, a, +, b, t1>. <2, c, +, d, null>
+4.  < 1, a, +, b, t1>, < 4, d, + 1, null>
+5. statement 5 becomes u = t1; 
+
+Global form: 
 
 
 
