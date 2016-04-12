@@ -248,11 +248,11 @@ REDUNDANCY ELIMINATION (RE)
 Common Subexpression elimination (CSE)
 Local form: within a BB
 EG: 
-1. x = a + b
-2. y = c + d
-3. z = a + b
-4. c = d + 1
-5. u = a + b
+x = a + b; //stmt 1
+y = c + d; //stmt 2
+z = a + b; //stmt 3
+c = d + 1; //stmt 4
+u = a + b; //stmt 5
 			use 5 tuples < pos, opnd1, op, opnd2, temp>
 			Basic process: 
 look at the statement → expression, see if there's a match in our list of 5 tuples
