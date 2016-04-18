@@ -2,7 +2,7 @@ Parser → Optimizer → Code Generation
 
 OPTIMIZER:
 1. Compute info about a program
-2. Use that info to perform program transformations.
+2. Use that info to perform program transformations with the goal of optimizing the run-time execution.
 
 
 
