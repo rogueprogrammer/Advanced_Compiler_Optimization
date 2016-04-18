@@ -271,16 +271,84 @@ replace current stmt with LHS = ti
 3. statement 1 is now: t1 = a + b; x = t1; statement 3 is now: z = t1;  < 1, a, +, b, t1>. <2, c, +, d, null>
 4.  < 1, a, +, b, t1>, < 4, d, + 1, null>
 5. statement 5 becomes u = t1; 
+Forward Substitution
+opposite of CSE
 
-Global form: 
-
-
-
-
-
+LOOP INVARIANT CODE MOTION
+if instructions inside a loop capture the same thing in every iteration, move outside loop
 
 
+LOOP OPTIMIZATIONS:
+look for nice loops
+for (exp1 ; exp2; exp3)
+body
+exp1 – asign a value to an integer loop index I
+exp2 – compares I to a loop constant
+exp3 – increments or decrements I by a loop constant
+body – contains no definitions of I
+no arbitrary loop exits
+→ this is essentially a very simple loop , easy to understand loop index
+
+look for induction variables – variables that change in an arithmetic fashion (ie increments, decrements), forming some kind of arithmetic sequence
+
+ALIASING & Points-To
+Aliasing: 2 variables refer to the same memory location
+eg: x = &y (x and y are aliases)
+not only refers to pointers, but also objects
+Points to: 
+Hierarchy of Points-to problems:
+1) Aliases due to call-by-reference
+eg: 
+int a[], b[];     
+		main(){
+		m1:	foo(a, b);
+		m2:	foo(a,a);
+		}
 
 
+		void foo(int x[], int y[]){
+		s1:	x[i] = …
+		s2:	… = y[i]
+		s3:	… = a[i]
+		}
+	in foo() for m1, x and a are aliased, and y and b are aliased.
 
-	
+we can get aliases between parameters, between parameters and globals
+to avoid computing the same results twice as in foo, just do an if statement:
+if(x == y){ … }
+
+	f(){
+		int x, y, z, *p, *q;
+		p = &x;
+		if(...) q = & y; //p → x, q-> y
+		else q = &z; //p → x, q->z
+		*p = *q; //may aliasing : q → y or z
+		p = q;
+	}
+	for may-aliasing, we put a ? mark at the end of the statement, for must aliasing (aliasing we know for sure is true), we put ! At the end of the statement. 
+
+
+Flow sensitive points-to Analysis
+Basically doing analysis of aliasing
+expensive
+
+
+2) Use of indication operators (&, *)
+We assign types to each pointer, and do layers of direction and indirection, and compare types at each step, to see if the types match when we access and assign pointers. 
+3) Dynamic allocation
+Steensguard almost linear pointer-to algorithm
+tries to build storage shape graph\
+INTRAPROCEDURAL ANALYSIS
+not done in practice, too expensive, and when would it be done (given all the DLLs, SLLs, etc) → Link time? Not worth it.
+
+REGISTER ALLOCATION (RA)
+- in the IR 's (Intermediate Representations) , we used as many vars as we like
+where are variables stored → on the stack
+But registers are much much faster to access
+so, let's try to use as many registers as possible for storing variables
+Different levels of allocation
+1. Expression level: 
+create expresion tree. Do a post order traversal on the tree, allocating registers to variable nodes in the tree
+ 	- 2. Basic Block Register Allocation:
+
+
